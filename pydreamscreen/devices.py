@@ -334,28 +334,43 @@ class _BaseDreamScreenDevice:
         return self._ambient_color
 
     @ambient_color.setter
-    def ambient_color(self, value: tuple) -> None:
-        """Set DreamScreen ambient color.
+    def ambient_color(self,
+                      value: Union[tuple, list, bytes, str]) -> None:
+        r"""Set DreamScreen ambient color.
 
-        Takes tuple of RGB
-        e.g. (100,50,25)
+        Takes tuple/list of RGB
+        e.g. (200,150,50) or [200, 150, 50]
+        or hex value of color as string
+        e.g. '#C89632' or '#c93' or u'#C89632'
+        or bytes of color
+        e.g. b'\xc8\x96\x32' or b'\xc8\x962'
         """
-        if not isinstance(value, tuple):
-            raise TypeError("expected tuple got {}".format(type(value)))
-        elif len(value) != 3:
-            raise ValueError("expected tuple of length 3 {}"
-                             .format(len(value)))
-        for color in value:
-            if not isinstance(color, int):
-                raise TypeError("expected int got {}".format(type(color)))
-            elif color > 100 or color < 0:
-                raise ValueError("value {} out of bounds".format(color))
-        self._send_packet(self._build_packet(namespace=3,
-                                             command=8,
-                                             payload=[0]), update=False)
-        self._send_packet(self._build_packet(namespace=3,
-                                             command=5,
-                                             payload=value))
+        new_color = []  # type: List[int]
+        if isinstance(value, (tuple, list)):
+            for color in value:
+                if 0 <= color <= 255:
+                    new_color.append(color)
+        # Convert to bytes so next if statement takes care of it
+        elif isinstance(value, str) and value[0] == '#':
+            if len(value) == 4:
+                value = bytes(bytearray.fromhex(
+                    ''.join(a + b for a, b in zip(value[1:], '000'))))
+            elif len(value) == 7:
+                value = bytes(bytearray.fromhex(value[1:]))
+        if isinstance(value, bytes):
+            if len(value) == 3:
+                for color in value:
+                    if 0 <= color <= 255:
+                        new_color.append(color)
+        if len(new_color) == 3:
+            self._send_packet(self._build_packet(namespace=3,
+                                                 command=8,
+                                                 payload=[0]), update=False)
+            self._send_packet(self._build_packet(namespace=3,
+                                                 command=5,
+                                                 payload=new_color))
+        else:
+            raise TypeError('incomprehensible value given {!r}'.format(value))
 
     @property
     def ambient_scene(self) -> int:
