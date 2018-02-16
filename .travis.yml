@@ -9,4 +9,4 @@ install:
   - pip install pylint>=1.8.2 mypy>=0.560
 script:
   - pylint pydreamscreen
-  - mypy pydreamscreen
+  - mypy pydreamscreen --ignore-missing-imports
