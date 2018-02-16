@@ -5,6 +5,7 @@ setup(
     version='0.0.1',
     packages=find_packages(),
     author='Gregory Dosh',
+    author_email='gregory.r.dosh@gmail.com',
     description='Python device discovery and manipulation for DreamScreen HD, '
                 '4K, and SideKick devices.',
     license='MIT',
