@@ -172,7 +172,8 @@ class _BaseDreamScreenDevice:
         """Representation of device initialiation."""
         return "{}(ip={!r})".format(type(self).__name__, self.ip)
 
-    def _get_current_state(self) -> bool:
+    def update_current_state(self) -> bool:
+        """Force device to get current state."""
         current_state = get_state(self.ip)
         if current_state:
             self._update_current_state(current_state)
@@ -225,7 +226,7 @@ class _BaseDreamScreenDevice:
         else:
             self.socket.sendto(data, (self.ip, 8888))
         if update:
-            self._get_current_state()
+            self.update_current_state()
         return True
 
     @staticmethod
@@ -258,7 +259,7 @@ class _BaseDreamScreenDevice:
     def name(self) -> str:
         """Device Name."""
         if self._name is None:
-            success = self._get_current_state()
+            success = self.update_current_state()
             if not success and not self._name:
                 return 'Unknown'
         return self._name
@@ -267,7 +268,7 @@ class _BaseDreamScreenDevice:
     def group_name(self) -> str:
         """Group Name."""
         if self._group_name is None:
-            success = self._get_current_state()
+            success = self.update_current_state()
             if not success and not self._group_name:
                 return 'Unknown'
         return self._group_name
@@ -276,14 +277,14 @@ class _BaseDreamScreenDevice:
     def group_number(self) -> int:
         """Group Number."""
         if self._group_number is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._group_number
 
     @property
     def mode(self) -> int:
         """Selected DreamScreen Mode."""
         if self._mode is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._mode
 
     @mode.setter
@@ -308,7 +309,7 @@ class _BaseDreamScreenDevice:
     def brightness(self) -> int:
         """LED Brightness."""
         if self._brightness is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._brightness
 
     @brightness.setter
@@ -330,7 +331,7 @@ class _BaseDreamScreenDevice:
     def ambient_color(self) -> bytes:
         """Ambient Scene Color."""
         if self._ambient_color is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._ambient_color
 
     @ambient_color.setter
@@ -376,7 +377,7 @@ class _BaseDreamScreenDevice:
     def ambient_scene(self) -> int:
         """Ambient Scene."""
         if self._ambient_scene is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._ambient_scene
 
     @ambient_scene.setter
@@ -444,7 +445,7 @@ class DreamScreen(_BaseDreamScreenDevice):
     def hdmi_input(self) -> int:
         """hdmi_input."""
         if self._hdmi_input is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._hdmi_input
 
     @hdmi_input.setter
@@ -468,28 +469,28 @@ class DreamScreen(_BaseDreamScreenDevice):
     def hdmi_input_1_name(self) -> str:
         """HDMI Input 1 Name."""
         if self._hdmi_input_1_name is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._hdmi_input_1_name
 
     @property
     def hdmi_input_2_name(self) -> str:
         """HDMI Input 2 Name."""
         if self._hdmi_input_2_name is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._hdmi_input_2_name
 
     @property
     def hdmi_input_3_name(self) -> str:
         """HDMI Input 3 Name."""
         if self._hdmi_input_3_name is None:
-            self._get_current_state()
+            self.update_current_state()
         return self._hdmi_input_3_name
 
     @property
     def hdmi_active_channels(self) -> int:
         """HDMI Active Channels."""
         if not self._hdmi_active_channels:
-            self._get_current_state()
+            self.update_current_state()
         return self._hdmi_active_channels
 
 
