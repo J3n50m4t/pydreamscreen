@@ -9,4 +9,4 @@ Python library for DreamScreen device discovery and manipulation for Wifi enable
 Issues
 ======
 
-Please submit issues `here <https://github.com/GregoryDosh/pydreamscreen/issues>`.
+Please submit issues `here <https://github.com/GregoryDosh/pydreamscreen/issues>`_.
