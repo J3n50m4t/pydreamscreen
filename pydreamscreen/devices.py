@@ -77,7 +77,7 @@ class _ReceiveStateMessages:
                     if parsed_message:
                         yield parsed_message
         except socket.timeout:
-            raise StopIteration
+            return
 
     @staticmethod
     def parse_string(string: bytes) -> str:
