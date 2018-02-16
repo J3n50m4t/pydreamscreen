@@ -9,7 +9,7 @@ setup(
                 '4K, and SideKick devices.',
     license='MIT',
     url='https://github.com/GregoryDosh/pydreamscreen',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     include_package_data=True,
     install_requires=list(r.strip() for r in open('requirements.txt')),
     platforms='any',
