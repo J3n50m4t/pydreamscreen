@@ -20,9 +20,9 @@ if '--debug' in sys.argv:
 
 
 class _SendReadCurrentStateMessage:
-    """Context manager to send a status message to the network."""
+    """Context manager to send a state message to the network."""
 
-    STATUS_MESSAGE = b"\xFC\x05\xFF\x30\x01\x0A\x2A"
+    READ_STATE_MESSAGE = b"\xFC\x05\xFF\x30\x01\x0A\x2A"
 
     def __init__(self, ip: str = '255.255.255.255') -> None:
         """Handle socket configuration."""
@@ -37,7 +37,7 @@ class _SendReadCurrentStateMessage:
 
     def __enter__(self):
         """Send message on initialization."""
-        self.socket.sendto(self.STATUS_MESSAGE, (self.ip, 8888))
+        self.socket.sendto(self.READ_STATE_MESSAGE, (self.ip, 8888))
         return self
 
     def __exit__(self, *args):
@@ -46,7 +46,7 @@ class _SendReadCurrentStateMessage:
 
 
 class _ReceiveStateMessages:
-    """Context manager to receive status messages from the network."""
+    """Context manager to receive state messages from the network."""
 
     def __init__(self, timeout: float = 1.0) -> None:
         """Handle socket configuration."""
@@ -411,8 +411,8 @@ class _BaseDreamScreenDevice:
     def _mutable_properties(self):
         """All available mutable properties.
 
-        Each subclass can specify what status messages should/could be
-        changeable.  This impacts what will be updated on status updates and
+        Each subclass can specify what state messages should/could be
+        changeable.  This impacts what will be updated on state updates and
         what users are able to change through the setter properties.
 
         This needs to be implemented on each base device type individually.
@@ -580,7 +580,7 @@ def _main_messages():
     with _Timer():
         # Break after getting one good state.
         # Could also check if IP matches or can specify IP in state to ensure
-        # only getting status message from required device.
+        # only getting state message from required device.
         for state in get_states(timeout=5):
             print(state)
             # This could be a break after getting a specific
