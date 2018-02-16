@@ -24,7 +24,7 @@ class _SendReadCurrentStateMessage:
 
     STATUS_MESSAGE = b"\xFC\x05\xFF\x30\x01\x0A\x2A"
 
-    def __init__(self, ip: str='255.255.255.255') -> None:
+    def __init__(self, ip: str = '255.255.255.255') -> None:
         """Handle socket configuration."""
         self.ip = ip
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -48,7 +48,7 @@ class _SendReadCurrentStateMessage:
 class _ReceiveStateMessages:
     """Context manager to receive status messages from the network."""
 
-    def __init__(self, timeout: float=1.0) -> None:
+    def __init__(self, timeout: float = 1.0) -> None:
         """Handle socket configuration."""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(timeout)
@@ -214,8 +214,8 @@ class _BaseDreamScreenDevice:
 
     def _send_packet(self,
                      data: bytearray,
-                     broadcast: bool=False,
-                     update: bool=True) -> bool:
+                     broadcast: bool = False,
+                     update: bool = True) -> bool:
         if not isinstance(data, bytearray):
             _LOGGER.error("packet type %s != bytearray", type(data))
             return False
@@ -508,7 +508,7 @@ class SideKick(_BaseDreamScreenDevice):
                 'mode', 'brightness', 'ambient_color', 'ambient_scene']
 
 
-def get_devices(timeout: float=1.0) \
+def get_devices(timeout: float = 1.0) \
         -> List[Union[DreamScreenHD, DreamScreen4K, SideKick]]:
     """Return all of the currently detected devices on the network."""
     devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, SideKick]]
@@ -522,7 +522,7 @@ def get_devices(timeout: float=1.0) \
     return devices
 
 
-def get_states(ip: str='255.255.255.255', timeout: float=1.0) -> \
+def get_states(ip: str = '255.255.255.255', timeout: float = 1.0) -> \
         Generator:
     """State message generator for all devices found."""
     with _ReceiveStateMessages(timeout=timeout) as states, \
@@ -531,7 +531,7 @@ def get_states(ip: str='255.255.255.255', timeout: float=1.0) -> \
             yield state
 
 
-def get_state(ip: str, timeout: float=1.0) -> \
+def get_state(ip: str, timeout: float = 1.0) -> \
         Dict[str, Union[str, int, bytes, datetime.datetime]]:
     """State message generator for a specific device."""
     for state in get_states(ip=ip, timeout=timeout):
