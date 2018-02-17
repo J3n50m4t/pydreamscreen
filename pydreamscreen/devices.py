@@ -355,7 +355,7 @@ class _BaseDreamScreenDevice:
         elif isinstance(value, str) and value[0] == '#':
             if len(value) == 4:
                 value = bytes(bytearray.fromhex(
-                    ''.join(a + b for a, b in zip(value[1:], '000'))))
+                    ''.join(a + b for a, b in zip(value[1:], value[1:]))))
             elif len(value) == 7:
                 value = bytes(bytearray.fromhex(value[1:]))
         if isinstance(value, bytes):
@@ -590,9 +590,10 @@ def _main_messages():
 
 def _main_devices():
     for device in get_devices():
-        print("{!r} Brightness -> {}".format(device, device.brightness))
-        device.brightness = 95
-        print("{!r} Brightness -> {}".format(device, device.brightness))
+        # print("{!r} Brightness -> {}".format(device, device.brightness))
+        device.brightness = 100
+        # print("{!r} Brightness -> {}".format(device, device.brightness))
+        device.ambient_color = '#FFcc00'
 
 if __name__ == '__main__':
     _main_messages()
