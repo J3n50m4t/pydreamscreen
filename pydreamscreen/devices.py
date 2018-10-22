@@ -1,6 +1,7 @@
 """Gather state messages from DreamScreen devices."""
 import datetime
 import logging
+import re
 import socket
 import sys
 
@@ -67,12 +68,12 @@ class _ReceiveStateMessages:
 
     def __iter__(self):
         """Iteration over network messages."""
+        pattern = re.compile(b'\xfc[\x90-\xFF]\xff`\x01\n')
         try:
             while True:
                 message, address = self.socket.recvfrom(1024)
                 ip, port = address
-                if port == 8888 and \
-                        message[0:6] == b"\xfc\x91\xff`\x01\n":
+                if port == 8888 and pattern.match(message):
                     parsed_message = self.parse_message(message[6:], ip)
                     if parsed_message:
                         yield parsed_message
