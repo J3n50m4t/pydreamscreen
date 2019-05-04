@@ -2,12 +2,13 @@
 import logging
 
 from .devices import (DreamScreenHD, DreamScreen4K, SideKick,
-                      get_devices, get_states, get_state)
+                      get_device, get_devices, get_states, get_state)
 
 __version__ = '0.0.1'
 
 __all__ = (
     '__version__',
+    'get_device',
     'get_devices',
     'get_states',
     'get_state',
