@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='PyDreamScreen',
-    version='0.0.6',
+    name='PyDreamScreen.HA',
+    version='0.0.9',
     packages=find_packages(),
     author='Gregory Dosh',
     author_email='gregory.r.dosh@gmail.com',
