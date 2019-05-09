@@ -9,11 +9,11 @@ from .network import get_broadcasts
 
 from typing import cast, Union, Dict, List, Generator, Optional
 
-import crc8 # type: ignore
+import crc8  # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
-if '--debug' in sys.argv:
+if "--debug" in sys.argv:
     logging.basicConfig(level=logging.DEBUG)
 
 # pylint: disable=invalid-name,too-few-public-methods
@@ -27,26 +27,22 @@ class _SendReadCurrentStateMessage:
 
     READ_STATE_MESSAGE = b"\xFC\x05\xFF\x30\x01\x0A\x2A"
 
-    def __init__(self, ip: str = '255.255.255.255') -> None:
+    def __init__(self, ip: str = "255.255.255.255") -> None:
         """Handle socket configuration."""
         self.ip = ip
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET,
-                               socket.SO_REUSEADDR,
-                               1)
-        self.socket.setsockopt(socket.SOL_SOCKET,
-                               socket.SO_BROADCAST,
-                               1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     def __enter__(self):
         """Send message on initialization."""
         if self.ip == "255.255.255.255":
-           """Send to all known brodcast addresses."""
-           for bcast in get_broadcasts():
-             _LOGGER.debug("Sending to %s" % bcast)
-             self.socket.sendto(self.READ_STATE_MESSAGE, (bcast, 8888))
+            """Send to all known brodcast addresses."""
+            for bcast in get_broadcasts():
+                _LOGGER.debug("Sending to %s" % bcast)
+                self.socket.sendto(self.READ_STATE_MESSAGE, (bcast, 8888))
         else:
-          self.socket.sendto(self.READ_STATE_MESSAGE, (self.ip, 8888))
+            self.socket.sendto(self.READ_STATE_MESSAGE, (self.ip, 8888))
         return self
 
     def __exit__(self, *args):
@@ -61,13 +57,11 @@ class _ReceiveStateMessages:
         """Handle socket configuration."""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(timeout)
-        self.socket.setsockopt(socket.SOL_SOCKET,
-                               socket.SO_REUSEADDR,
-                               1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def __enter__(self):
         """Send message on initialization."""
-        self.socket.bind(('', 8888))
+        self.socket.bind(("", 8888))
         return self
 
     def __exit__(self, *args):
@@ -76,7 +70,7 @@ class _ReceiveStateMessages:
 
     def __iter__(self):
         """Iteration over network messages."""
-        pattern = re.compile(b'\xfc[\x90-\xFF]\xff`\x01\n')
+        pattern = re.compile(b"\xfc[\x90-\xFF]\xff`\x01\n")
         try:
             _LOGGER.debug("Listening...")
             while True:
@@ -96,14 +90,15 @@ class _ReceiveStateMessages:
     def parse_string(string: bytes) -> str:
         """Take bytes from packet into strimmed string."""
         try:
-            return string.strip(b'\x00').decode('utf8').strip()
+            return string.strip(b"\x00").decode("utf8").strip()
         except (ValueError, TypeError):
             _LOGGER.error(str(sys.exc_info()[1]))
-        return ''
+        return ""
 
     @staticmethod
-    def parse_message(message: bytes, ip: str) -> \
-            Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
+    def parse_message(
+        message: bytes, ip: str
+    ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
         """Take a packet payload and convert to dictionary."""
         if message[-2] == 1:
             device_type = "DreamScreenHD"
@@ -121,27 +116,34 @@ class _ReceiveStateMessages:
             "recent_state_message": message,
         }  # type: Dict[str, Union[str, int, bytes, datetime.datetime]]
 
-        parsed_message.update({
-            "name": _ReceiveStateMessages.parse_string(message[0:16]),
-            "group_name": _ReceiveStateMessages.parse_string(message[16:32]),
-            "group_number": message[32],
-            "mode": message[33],
-            "brightness": message[34],
-            "ambient_color": message[40:43],
-            "ambient_scene": message[62],
-        })
+        parsed_message.update(
+            {
+                "name": _ReceiveStateMessages.parse_string(message[0:16]),
+                "group_name": _ReceiveStateMessages.parse_string(message[16:32]),
+                "group_number": message[32],
+                "mode": message[33],
+                "brightness": message[34],
+                "ambient_color": message[40:43],
+                "ambient_scene": message[62],
+            }
+        )
         _LOGGER.debug("Update: %s" % parsed_message)
         if device_type != "SideKick":
-            parsed_message.update({
-                "hdmi_input": message[73],
-                "hdmi_input_1_name": _ReceiveStateMessages.parse_string(
-                    message[75:91]),
-                "hdmi_input_2_name": _ReceiveStateMessages.parse_string(
-                    message[91:107]),
-                "hdmi_input_3_name": _ReceiveStateMessages.parse_string(
-                    message[107:123]),
-                "hdmi_active_channels": message[129],
-            })
+            parsed_message.update(
+                {
+                    "hdmi_input": message[73],
+                    "hdmi_input_1_name": _ReceiveStateMessages.parse_string(
+                        message[75:91]
+                    ),
+                    "hdmi_input_2_name": _ReceiveStateMessages.parse_string(
+                        message[91:107]
+                    ),
+                    "hdmi_input_3_name": _ReceiveStateMessages.parse_string(
+                        message[107:123]
+                    ),
+                    "hdmi_active_channels": message[129],
+                }
+            )
         return parsed_message
 
 
@@ -164,24 +166,18 @@ class _BaseDreamScreenDevice:
         self._recent_state_message = None  # type: Union[None, bytes]
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET,
-                               socket.SO_REUSEADDR,
-                               1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # This is used for broadcasting to Groups vs. single devices
-        self.socket.setsockopt(socket.SOL_SOCKET,
-                               socket.SO_BROADCAST,
-                               1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         _LOGGER.debug("%s initialized", type(self).__name__)
-        if 'state' in kwargs and isinstance(kwargs['state'], dict):
+        if "state" in kwargs and isinstance(kwargs["state"], dict):
             _LOGGER.debug("setting %s state", self.ip)
-            self._update_current_state(kwargs['state'])
+            self._update_current_state(kwargs["state"])
 
     def __str__(self):
         """Pretty format of device."""
-        return "{}(ip={!r}, name={!r})".format(type(self).__name__,
-                                               self.ip,
-                                               self.name)
+        return "{}(ip={!r}, name={!r})".format(type(self).__name__, self.ip, self.name)
 
     def __repr__(self):
         """Representation of device initialiation."""
@@ -197,47 +193,41 @@ class _BaseDreamScreenDevice:
         return False
 
     def _update_current_state(self, state: dict) -> bool:
-        if 'device_type' not in state:
+        if "device_type" not in state:
             return False
-        if state['device_type'] != type(self).__name__:
-            _LOGGER.error("device type mismatch %s != %s",
-                          type(self).__name__,
-                          state['device_type'])
+        if state["device_type"] != type(self).__name__:
+            _LOGGER.error(
+                "device type mismatch %s != %s",
+                type(self).__name__,
+                state["device_type"],
+            )
             return False
         for key, value in state.items():
             if key in self._mutable_properties:
-                _LOGGER.debug('setting _%s to %s', key, value)
+                _LOGGER.debug("setting _%s to %s", key, value)
                 setattr(self, "_{}".format(key), value)
         return True
 
-    def _build_packet(self,
-                      namespace: int,
-                      command: int,
-                      payload: Union[List, tuple]) \
-            -> bytearray:
+    def _build_packet(
+        self, namespace: int, command: int, payload: Union[List, tuple]
+    ) -> bytearray:
         if not isinstance(payload, (list, tuple)):
             _LOGGER.error("payload type %s != list|tuple", type(payload))
         flags = 17 if self.group_number == 0 else 33
-        resp = [252,
-                len(payload) + 5,
-                self.group_number,
-                flags,
-                namespace,
-                command]
+        resp = [252, len(payload) + 5, self.group_number, flags, namespace, command]
         resp.extend(payload)
         resp.extend(self._crc8(bytearray(resp)))
         return bytearray(resp)
 
-    def _send_packet(self,
-                     data: bytearray,
-                     broadcast: bool = False,
-                     update: bool = True) -> bool:
+    def _send_packet(
+        self, data: bytearray, broadcast: bool = False, update: bool = True
+    ) -> bool:
         if not isinstance(data, bytearray):
             _LOGGER.error("packet type %s != bytearray", type(data))
             return False
         _LOGGER.debug("sent %s", data)
         if broadcast:
-            self.socket.sendto(data, ('255.255.255.255', 8888))
+            self.socket.sendto(data, ("255.255.255.255", 8888))
         else:
             self.socket.sendto(data, (self.ip, 8888))
         if update:
@@ -276,7 +266,7 @@ class _BaseDreamScreenDevice:
         if self._name is None:
             success = self.update_current_state()
             if not success and not self._name:
-                return 'Unknown'
+                return "Unknown"
         return self._name
 
     @property
@@ -285,7 +275,7 @@ class _BaseDreamScreenDevice:
         if self._group_name is None:
             success = self.update_current_state()
             if not success and not self._group_name:
-                return 'Unknown'
+                return "Unknown"
         return self._group_name
 
     @property
@@ -314,9 +304,9 @@ class _BaseDreamScreenDevice:
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
         elif 0 <= value <= 3:
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=1,
-                                                 payload=[value]))
+            self._send_packet(
+                self._build_packet(namespace=3, command=1, payload=[value])
+            )
         else:
             raise ValueError("value {} out of bounds".format(value))
 
@@ -336,9 +326,9 @@ class _BaseDreamScreenDevice:
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
         elif 0 <= value <= 100:
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=2,
-                                                 payload=[value]))
+            self._send_packet(
+                self._build_packet(namespace=3, command=2, payload=[value])
+            )
         else:
             raise ValueError("value {} out of bounds".format(value))
 
@@ -350,8 +340,7 @@ class _BaseDreamScreenDevice:
         return cast(bytes, self._ambient_color)
 
     @ambient_color.setter
-    def ambient_color(self,
-                      value: Union[tuple, list, bytes, str]) -> None:
+    def ambient_color(self, value: Union[tuple, list, bytes, str]) -> None:
         r"""Set DreamScreen ambient color.
 
         Takes tuple/list of RGB
@@ -367,10 +356,13 @@ class _BaseDreamScreenDevice:
                 if 0 <= color <= 255:
                     new_color.append(color)
         # Convert to bytes so next if statement takes care of it
-        elif isinstance(value, str) and value[0] == '#':
+        elif isinstance(value, str) and value[0] == "#":
             if len(value) == 4:
-                value = bytes(bytearray.fromhex(
-                    ''.join(a + b for a, b in zip(value[1:], value[1:]))))
+                value = bytes(
+                    bytearray.fromhex(
+                        "".join(a + b for a, b in zip(value[1:], value[1:]))
+                    )
+                )
             elif len(value) == 7:
                 value = bytes(bytearray.fromhex(value[1:]))
         if isinstance(value, bytes):
@@ -379,14 +371,14 @@ class _BaseDreamScreenDevice:
                     if 0 <= color <= 255:
                         new_color.append(color)
         if len(new_color) == 3:
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=8,
-                                                 payload=[0]), update=False)
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=5,
-                                                 payload=new_color))
+            self._send_packet(
+                self._build_packet(namespace=3, command=8, payload=[0]), update=False
+            )
+            self._send_packet(
+                self._build_packet(namespace=3, command=5, payload=new_color)
+            )
         else:
-            raise TypeError('incomprehensible value given {!r}'.format(value))
+            raise TypeError("incomprehensible value given {!r}".format(value))
 
     @property
     def ambient_scene(self) -> int:
@@ -413,12 +405,12 @@ class _BaseDreamScreenDevice:
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
         elif 0 <= value <= 8:
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=8,
-                                                 payload=[1]), update=False)
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=13,
-                                                 payload=[value]))
+            self._send_packet(
+                self._build_packet(namespace=3, command=8, payload=[1]), update=False
+            )
+            self._send_packet(
+                self._build_packet(namespace=3, command=13, payload=[value])
+            )
         else:
             raise ValueError("value {} out of bounds".format(value))
 
@@ -450,11 +442,23 @@ class DreamScreen(_BaseDreamScreenDevice):
     @property
     def _mutable_properties(self):
         """Return DreamScreen HD & 4K Mutable Properties."""
-        return ['ip', 'name', 'update_time',
-                'recent_state_message', 'group_name', 'group_number',
-                'mode', 'brightness', 'ambient_color', 'ambient_scene',
-                'hdmi_input', 'hdmi_input_1_name', 'hdmi_input_2_name',
-                'hdmi_input_3_name', 'hdmi_active_channels']
+        return [
+            "ip",
+            "name",
+            "update_time",
+            "recent_state_message",
+            "group_name",
+            "group_number",
+            "mode",
+            "brightness",
+            "ambient_color",
+            "ambient_scene",
+            "hdmi_input",
+            "hdmi_input_1_name",
+            "hdmi_input_2_name",
+            "hdmi_input_3_name",
+            "hdmi_active_channels",
+        ]
 
     @property
     def hdmi_input(self) -> int:
@@ -474,9 +478,9 @@ class DreamScreen(_BaseDreamScreenDevice):
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
         elif 0 <= value <= 2:
-            self._send_packet(self._build_packet(namespace=3,
-                                                 command=32,
-                                                 payload=[value]))
+            self._send_packet(
+                self._build_packet(namespace=3, command=32, payload=[value])
+            )
         else:
             raise ValueError("value {} out of bounds".format(value))
 
@@ -535,24 +539,34 @@ class SideKick(_BaseDreamScreenDevice):
     @property
     def _mutable_properties(self):
         """Return SideKick Mutable Properties."""
-        return ['ip', 'name', 'group_name', 'group_number',
-                'mode', 'brightness', 'ambient_color', 'ambient_scene']
+        return [
+            "ip",
+            "name",
+            "group_name",
+            "group_number",
+            "mode",
+            "brightness",
+            "ambient_color",
+            "ambient_scene",
+        ]
 
 
-def get_device(state: Dict[str, Union[str, int, bytes, datetime.datetime]]) \
-        -> Union[None, DreamScreenHD, DreamScreen4K, SideKick]:
-    if state['device_type'] == 'DreamScreenHD':
-      return DreamScreenHD(ip=state['ip'], state=state)
-    elif state['device_type'] == 'DreamScreen4K':
-      return DreamScreen4K(ip=state['ip'], state=state)
-    elif state['device_type'] == 'SideKick':
-      return SideKick(ip=cast(str, state['ip']), state=state)
+def get_device(
+    state: Dict[str, Union[str, int, bytes, datetime.datetime]]
+) -> Union[None, DreamScreenHD, DreamScreen4K, SideKick]:
+    if state["device_type"] == "DreamScreenHD":
+        return DreamScreenHD(ip=state["ip"], state=state)
+    elif state["device_type"] == "DreamScreen4K":
+        return DreamScreen4K(ip=state["ip"], state=state)
+    elif state["device_type"] == "SideKick":
+        return SideKick(ip=cast(str, state["ip"]), state=state)
 
     return None
 
 
-def get_devices(timeout: float = 1.0) \
-        -> List[Union[DreamScreenHD, DreamScreen4K, SideKick]]:
+def get_devices(
+    timeout: float = 1.0
+) -> List[Union[DreamScreenHD, DreamScreen4K, SideKick]]:
     """Return all of the currently detected devices on the network."""
     devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, SideKick]]
     for state in get_states(timeout=timeout):
@@ -564,20 +578,21 @@ def get_devices(timeout: float = 1.0) \
     return devices
 
 
-def get_states(ip: str = '255.255.255.255', timeout: float = 1.0) -> \
-        Generator:
+def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
     """State message generator for all devices found."""
-    with _ReceiveStateMessages(timeout=timeout) as states, \
-            _SendReadCurrentStateMessage(ip=ip):
+    with _ReceiveStateMessages(timeout=timeout) as states, _SendReadCurrentStateMessage(
+        ip=ip
+    ):
         for state in states:
             yield state
 
 
-def get_state(ip: str, timeout: float = 1.0) -> \
-        Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
+def get_state(
+    ip: str, timeout: float = 1.0
+) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
     """State message generator for a specific device."""
     for state in get_states(ip=ip, timeout=timeout):
-        if state['ip'] == ip:
+        if state["ip"] == ip:
             return state
     _LOGGER.error("couldn't get_state of %s", ip)
     return None
@@ -619,8 +634,9 @@ def _main_devices():
         # print("{!r} Brightness -> {}".format(device, device.brightness))
         device.brightness = 100
         # print("{!r} Brightness -> {}".format(device, device.brightness))
-        device.ambient_color = '#FFcc00'
+        device.ambient_color = "#FFcc00"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     _main_messages()
     _main_devices()
