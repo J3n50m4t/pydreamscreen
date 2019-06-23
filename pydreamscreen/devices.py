@@ -106,6 +106,8 @@ class _ReceiveStateMessages:
             device_type = "DreamScreen4K"
         elif message[-2] == 3:
             device_type = "SideKick"
+        elif message[-2] == 7:
+            device_type = "DreamScreenSolo"
         else:
             _LOGGER.debug("Unknown device type: %s" % message[-2])
             return None
@@ -532,6 +534,14 @@ class DreamScreen4K(DreamScreen):
 
     pass
 
+class DreamScreenSolo(DreamScreen):
+    """DreamScreenSolo Class.
+
+    This is mostly so the naame appear correctly since they're identical
+    in functionality (for now) but who knows if anythingh changes in the future.
+    """
+
+    pass
 
 class SideKick(_BaseDreamScreenDevice):
     """SideKick Class."""
@@ -553,11 +563,13 @@ class SideKick(_BaseDreamScreenDevice):
 
 def get_device(
     state: Dict[str, Union[str, int, bytes, datetime.datetime]]
-) -> Union[None, DreamScreenHD, DreamScreen4K, SideKick]:
+) -> Union[None, DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]:
     if state["device_type"] == "DreamScreenHD":
         return DreamScreenHD(ip=state["ip"], state=state)
     elif state["device_type"] == "DreamScreen4K":
         return DreamScreen4K(ip=state["ip"], state=state)
+    elif state["device_type"] == "DreamScreenSolo":
+        return DreamScreenSolo(ip=state["ip"], state=state)
     elif state["device_type"] == "SideKick":
         return SideKick(ip=cast(str, state["ip"]), state=state)
 
@@ -566,14 +578,14 @@ def get_device(
 
 def get_devices(
     timeout: float = 1.0
-) -> List[Union[DreamScreenHD, DreamScreen4K, SideKick]]:
+) -> List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]]:
     """Return all of the currently detected devices on the network."""
-    devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, SideKick]]
+    devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo , SideKick]]
     for state in get_states(timeout=timeout):
         _LOGGER.debug("Received state: %s" % state)
         device = get_device(state)
         if device != None:
-            devices.append(cast(Union[DreamScreenHD, DreamScreen4K, SideKick], device))
+            devices.append(cast(Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick], device))
     _LOGGER.debug("Devices: %s" % devices)
     return devices
 
@@ -583,6 +595,7 @@ def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
     with _ReceiveStateMessages(timeout=timeout) as states, _SendReadCurrentStateMessage(
         ip=ip
     ):
+
         for state in states:
             yield state
 

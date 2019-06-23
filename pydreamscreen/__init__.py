@@ -4,6 +4,7 @@ import logging
 from .devices import (
     DreamScreenHD,
     DreamScreen4K,
+    DreamScreenSolo,
     SideKick,
     get_device,
     get_devices,
@@ -21,6 +22,7 @@ __all__ = (
     "get_state",
     "DreamScreenHD",
     "DreamScreen4K",
+    "DreamScreenSolo",
     "SideKick",
 )
 
