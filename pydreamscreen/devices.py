@@ -5,11 +5,11 @@ import re
 import socket
 import sys
 
-from .network import get_broadcasts
-
 from typing import cast, Union, Dict, List, Generator, Optional
 
 import crc8  # type: ignore
+
+from .network import get_broadcasts
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,9 +37,8 @@ class _SendReadCurrentStateMessage:
     def __enter__(self):
         """Send message on initialization."""
         if self.ip == "255.255.255.255":
-            """Send to all known brodcast addresses."""
             for bcast in get_broadcasts():
-                _LOGGER.debug("Sending to %s" % bcast)
+                _LOGGER.debug("Sending to %s", bcast)
                 self.socket.sendto(self.READ_STATE_MESSAGE, (bcast, 8888))
         else:
             self.socket.sendto(self.READ_STATE_MESSAGE, (self.ip, 8888))
@@ -76,9 +75,9 @@ class _ReceiveStateMessages:
             while True:
                 message, address = self.socket.recvfrom(1024)
                 ip, port = address
-                _LOGGER.debug("Received %s from %s [%s]" % (message, ip, port))
+                _LOGGER.debug("Received message=%s from ip=%s port=[%s]", message, ip, port)
                 if port == 8888 and pattern.match(message):
-                    _LOGGER.debug("Processing state from %s [%s]" % (ip, port))
+                    _LOGGER.debug("Processing state from ip=%s port=[%s]", ip, port)
                     parsed_message = self.parse_message(message[6:], ip)
                     if parsed_message:
                         _LOGGER.debug("Successfully parsed state message")
@@ -97,7 +96,7 @@ class _ReceiveStateMessages:
 
     @staticmethod
     def parse_message(
-        message: bytes, ip: str
+            message: bytes, ip: str
     ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
         """Take a packet payload and convert to dictionary."""
         if message[-2] == 1:
@@ -109,7 +108,7 @@ class _ReceiveStateMessages:
         elif message[-2] == 7:
             device_type = "DreamScreenSolo"
         else:
-            _LOGGER.debug("Unknown device type: %s" % message[-2])
+            _LOGGER.debug("Unknown device type: %s", message[-2])
             return None
         parsed_message = {
             "ip": ip,
@@ -129,7 +128,7 @@ class _ReceiveStateMessages:
                 "ambient_scene": message[62],
             }
         )
-        _LOGGER.debug("Update: %s" % parsed_message)
+        _LOGGER.debug("Update: %s", parsed_message)
         if device_type != "SideKick":
             parsed_message.update(
                 {
@@ -211,7 +210,7 @@ class _BaseDreamScreenDevice:
         return True
 
     def _build_packet(
-        self, namespace: int, command: int, payload: Union[List, tuple]
+            self, namespace: int, command: int, payload: Union[List, tuple]
     ) -> bytearray:
         if not isinstance(payload, (list, tuple)):
             _LOGGER.error("payload type %s != list|tuple", type(payload))
@@ -222,7 +221,7 @@ class _BaseDreamScreenDevice:
         return bytearray(resp)
 
     def _send_packet(
-        self, data: bytearray, broadcast: bool = False, update: bool = True
+            self, data: bytearray, broadcast: bool = False, update: bool = True
     ) -> bool:
         if not isinstance(data, bytearray):
             _LOGGER.error("packet type %s != bytearray", type(data))
@@ -305,7 +304,7 @@ class _BaseDreamScreenDevice:
         """
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
-        elif 0 <= value <= 3:
+        if 0 <= value <= 3:
             self._send_packet(
                 self._build_packet(namespace=3, command=1, payload=[value])
             )
@@ -327,7 +326,7 @@ class _BaseDreamScreenDevice:
         """
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
-        elif 0 <= value <= 100:
+        if 0 <= value <= 100:
             self._send_packet(
                 self._build_packet(namespace=3, command=2, payload=[value])
             )
@@ -406,7 +405,7 @@ class _BaseDreamScreenDevice:
         """
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
-        elif 0 <= value <= 8:
+        if 0 <= value <= 8:
             self._send_packet(
                 self._build_packet(namespace=3, command=8, payload=[1]), update=False
             )
@@ -479,7 +478,7 @@ class DreamScreen(_BaseDreamScreenDevice):
         """
         if not isinstance(value, int):
             raise TypeError("expected int got {}".format(type(value)))
-        elif 0 <= value <= 2:
+        if 0 <= value <= 2:
             self._send_packet(
                 self._build_packet(namespace=3, command=32, payload=[value])
             )
@@ -522,8 +521,6 @@ class DreamScreenHD(DreamScreen):
     in functionality (for now) but who knows if anything changes in the future.
     """
 
-    pass
-
 
 class DreamScreen4K(DreamScreen):
     """DreamScreen4K Class.
@@ -532,8 +529,6 @@ class DreamScreen4K(DreamScreen):
     in functionality (for now) but who knows if anything changes in the future.
     """
 
-    pass
-
 class DreamScreenSolo(DreamScreen):
     """DreamScreenSolo Class.
 
@@ -541,7 +536,6 @@ class DreamScreenSolo(DreamScreen):
     in functionality (for now) but who knows if anythingh changes in the future.
     """
 
-    pass
 
 class SideKick(_BaseDreamScreenDevice):
     """SideKick Class."""
@@ -560,40 +554,45 @@ class SideKick(_BaseDreamScreenDevice):
             "ambient_scene",
         ]
 
-
 def get_device(
-    state: Dict[str, Union[str, int, bytes, datetime.datetime]]
+        state: Dict[str, Union[str, int, bytes, datetime.datetime]]
 ) -> Union[None, DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]:
+    """Return device ip and"""
     if state["device_type"] == "DreamScreenHD":
         return DreamScreenHD(ip=state["ip"], state=state)
-    elif state["device_type"] == "DreamScreen4K":
+    if state["device_type"] == "DreamScreen4K":
         return DreamScreen4K(ip=state["ip"], state=state)
-    elif state["device_type"] == "DreamScreenSolo":
+    if state["device_type"] == "DreamScreenSolo":
         return DreamScreenSolo(ip=state["ip"], state=state)
-    elif state["device_type"] == "SideKick":
+    if state["device_type"] == "SideKick":
         return SideKick(ip=cast(str, state["ip"]), state=state)
 
     return None
 
 
 def get_devices(
-    timeout: float = 1.0
+        timeout: float = 1.0
 ) -> List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]]:
     """Return all of the currently detected devices on the network."""
     devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo , SideKick]]
     for state in get_states(timeout=timeout):
-        _LOGGER.debug("Received state: %s" % state)
+        _LOGGER.debug("Received state: %s", state)
         device = get_device(state)
-        if device != None:
-            devices.append(cast(Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick], device))
-    _LOGGER.debug("Devices: %s" % devices)
+        if device is not None:
+            devices.append(
+                cast(
+                    Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick],
+                    device
+                    )
+                )
+    _LOGGER.debug("Devices: %s", devices)
     return devices
 
 
 def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
     """State message generator for all devices found."""
     with _ReceiveStateMessages(timeout=timeout) as states, _SendReadCurrentStateMessage(
-        ip=ip
+            ip=ip
     ):
 
         for state in states:
@@ -601,7 +600,7 @@ def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
 
 
 def get_state(
-    ip: str, timeout: float = 1.0
+        ip: str, timeout: float = 1.0
 ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
     """State message generator for a specific device."""
     for state in get_states(ip=ip, timeout=timeout):
