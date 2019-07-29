@@ -532,8 +532,8 @@ class DreamScreen4K(DreamScreen):
 class DreamScreenSolo(DreamScreen):
     """DreamScreenSolo Class.
 
-    This is mostly so the naame appear correctly since they're identical
-    in functionality (for now) but who knows if anythingh changes in the future.
+    This is mostly so the name appear correctly since they're identical
+    in functionality (for now) but who knows if anything changes in the future.
     """
 
 
