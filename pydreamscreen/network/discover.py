@@ -5,12 +5,12 @@ import netifaces  # type: ignore
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_interfaces(excluded=None):
+def get_interfaces(excluded=[]):
     """gets interfaces"""
     return [iface for iface in netifaces.interfaces() if iface not in excluded]
 
 
-def get_networks(excluded=None):
+def get_networks(excluded=[]):
     """gets networks"""
     return [
         netifaces.ifaddresses(iface)[netifaces.AF_INET]
@@ -19,7 +19,7 @@ def get_networks(excluded=None):
     ]
 
 
-def get_broadcasts(excluded=None):
+def get_broadcasts(excluded=[]):
     """gets broadcasts"""
     return [
         addr["broadcast"]

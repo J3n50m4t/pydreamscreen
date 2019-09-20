@@ -75,7 +75,9 @@ class _ReceiveStateMessages:
             while True:
                 message, address = self.socket.recvfrom(1024)
                 ip, port = address
-                _LOGGER.debug("Received message=%s from ip=%s port=[%s]", message, ip, port)
+                _LOGGER.debug(
+                    "Received message=%s from ip=%s port=[%s]", message, ip, port
+                )
                 if port == 8888 and pattern.match(message):
                     _LOGGER.debug("Processing state from ip=%s port=[%s]", ip, port)
                     parsed_message = self.parse_message(message[6:], ip)
@@ -96,7 +98,7 @@ class _ReceiveStateMessages:
 
     @staticmethod
     def parse_message(
-            message: bytes, ip: str
+        message: bytes, ip: str
     ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
         """Take a packet payload and convert to dictionary."""
         if message[-2] == 1:
@@ -143,6 +145,7 @@ class _ReceiveStateMessages:
                         message[107:123]
                     ),
                     "hdmi_active_channels": message[129],
+                    "hdr_tone_remapping": message[139],
                 }
             )
         return parsed_message
@@ -210,7 +213,7 @@ class _BaseDreamScreenDevice:
         return True
 
     def _build_packet(
-            self, namespace: int, command: int, payload: Union[List, tuple]
+        self, namespace: int, command: int, payload: Union[List, tuple]
     ) -> bytearray:
         if not isinstance(payload, (list, tuple)):
             _LOGGER.error("payload type %s != list|tuple", type(payload))
@@ -221,7 +224,7 @@ class _BaseDreamScreenDevice:
         return bytearray(resp)
 
     def _send_packet(
-            self, data: bytearray, broadcast: bool = False, update: bool = True
+        self, data: bytearray, broadcast: bool = False, update: bool = True
     ) -> bool:
         if not isinstance(data, bytearray):
             _LOGGER.error("packet type %s != bytearray", type(data))
@@ -415,6 +418,9 @@ class _BaseDreamScreenDevice:
         else:
             raise ValueError("value {} out of bounds".format(value))
 
+    def restart(self):
+        self._send_packet(self._build_packet(namespace=4, command=2, payload=[115, 65]))
+
     @property
     def _mutable_properties(self):
         """All available mutable properties.
@@ -439,6 +445,7 @@ class DreamScreen(_BaseDreamScreenDevice):
         self._hdmi_input_2_name = None  # type: str
         self._hdmi_input_3_name = None  # type: str
         self._hdmi_active_channels = None  # type: int
+        self._hdr_tone_remapping = None  # type: int
 
     @property
     def _mutable_properties(self):
@@ -459,6 +466,7 @@ class DreamScreen(_BaseDreamScreenDevice):
             "hdmi_input_2_name",
             "hdmi_input_3_name",
             "hdmi_active_channels",
+            "hdr_tone_remapping",
         ]
 
     @property
@@ -513,6 +521,29 @@ class DreamScreen(_BaseDreamScreenDevice):
             self.update_current_state()
         return self._hdmi_active_channels
 
+    @property
+    def hdr_tone_remapping(self) -> int:
+        """HDR Tone Remapping."""
+        if not self._hdr_tone_remapping:
+            self.update_current_state()
+        return self._hdr_tone_remapping
+
+    @hdr_tone_remapping.setter
+    def hdr_tone_remapping(self, value: int) -> None:
+        """Disable/Enable HDR Tone Mapping
+
+        0: Off
+        1: On
+        """
+        if not isinstance(value, int):
+            raise TypeError("expected int got {}".format(type(value)))
+        if 0 <= value <= 2:
+            self._send_packet(
+                self._build_packet(namespace=3, command=96, payload=[value])
+            )
+        else:
+            raise ValueError("value {} out of bounds".format(value))
+
 
 class DreamScreenHD(DreamScreen):
     """DreamScreenHD Class.
@@ -528,6 +559,7 @@ class DreamScreen4K(DreamScreen):
     This is mostly so the names appear correctly since they're identical
     in functionality (for now) but who knows if anything changes in the future.
     """
+
 
 class DreamScreenSolo(DreamScreen):
     """DreamScreenSolo Class.
@@ -554,8 +586,9 @@ class SideKick(_BaseDreamScreenDevice):
             "ambient_scene",
         ]
 
+
 def get_device(
-        state: Dict[str, Union[str, int, bytes, datetime.datetime]]
+    state: Dict[str, Union[str, int, bytes, datetime.datetime]]
 ) -> Union[None, DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]:
     """Return device ip and"""
     if state["device_type"] == "DreamScreenHD":
@@ -571,10 +604,12 @@ def get_device(
 
 
 def get_devices(
-        timeout: float = 1.0
+    timeout: float = 1.0
 ) -> List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]]:
     """Return all of the currently detected devices on the network."""
-    devices = []  # type: List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo , SideKick]]
+    devices = (
+        []
+    )  # type: List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo , SideKick]]
     for state in get_states(timeout=timeout):
         _LOGGER.debug("Received state: %s", state)
         device = get_device(state)
@@ -582,9 +617,9 @@ def get_devices(
             devices.append(
                 cast(
                     Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick],
-                    device
-                    )
+                    device,
                 )
+            )
     _LOGGER.debug("Devices: %s", devices)
     return devices
 
@@ -592,7 +627,7 @@ def get_devices(
 def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
     """State message generator for all devices found."""
     with _ReceiveStateMessages(timeout=timeout) as states, _SendReadCurrentStateMessage(
-            ip=ip
+        ip=ip
     ):
 
         for state in states:
@@ -600,7 +635,7 @@ def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
 
 
 def get_state(
-        ip: str, timeout: float = 1.0
+    ip: str, timeout: float = 1.0
 ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
     """State message generator for a specific device."""
     for state in get_states(ip=ip, timeout=timeout):
