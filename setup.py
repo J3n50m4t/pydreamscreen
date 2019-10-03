@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="PyDreamScreen",
-    version="0.0.12",
+    version="0.0.13",
     packages=find_packages(),
     author="Gregory Dosh",
     author_email="pypi@gregorydosh.com",
