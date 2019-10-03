@@ -4,6 +4,7 @@ import logging
 import re
 import socket
 import sys
+import time
 
 from typing import cast, Union, Dict, List, Generator, Optional
 
@@ -98,7 +99,7 @@ class _ReceiveStateMessages:
 
     @staticmethod
     def parse_message(
-        message: bytes, ip: str
+            message: bytes, ip: str
     ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
         """Take a packet payload and convert to dictionary."""
         if message[-2] == 1:
@@ -213,7 +214,7 @@ class _BaseDreamScreenDevice:
         return True
 
     def _build_packet(
-        self, namespace: int, command: int, payload: Union[List, tuple]
+            self, namespace: int, command: int, payload: Union[List, tuple]
     ) -> bytearray:
         if not isinstance(payload, (list, tuple)):
             _LOGGER.error("payload type %s != list|tuple", type(payload))
@@ -224,7 +225,7 @@ class _BaseDreamScreenDevice:
         return bytearray(resp)
 
     def _send_packet(
-        self, data: bytearray, broadcast: bool = False, update: bool = True
+            self, data: bytearray, broadcast: bool = False, update: bool = True
     ) -> bool:
         if not isinstance(data, bytearray):
             _LOGGER.error("packet type %s != bytearray", type(data))
@@ -419,6 +420,7 @@ class _BaseDreamScreenDevice:
             raise ValueError("value {} out of bounds".format(value))
 
     def restart(self):
+        """Restarts device"""
         self._send_packet(self._build_packet(namespace=4, command=2, payload=[115, 65]))
 
     @property
@@ -588,7 +590,7 @@ class SideKick(_BaseDreamScreenDevice):
 
 
 def get_device(
-    state: Dict[str, Union[str, int, bytes, datetime.datetime]]
+        state: Dict[str, Union[str, int, bytes, datetime.datetime]]
 ) -> Union[None, DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]:
     """Return device ip and"""
     if state["device_type"] == "DreamScreenHD":
@@ -604,7 +606,7 @@ def get_device(
 
 
 def get_devices(
-    timeout: float = 1.0
+        timeout: float = 1.0
 ) -> List[Union[DreamScreenHD, DreamScreen4K, DreamScreenSolo, SideKick]]:
     """Return all of the currently detected devices on the network."""
     devices = (
@@ -627,7 +629,7 @@ def get_devices(
 def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
     """State message generator for all devices found."""
     with _ReceiveStateMessages(timeout=timeout) as states, _SendReadCurrentStateMessage(
-        ip=ip
+            ip=ip
     ):
 
         for state in states:
@@ -635,7 +637,7 @@ def get_states(ip: str = "255.255.255.255", timeout: float = 1.0) -> Generator:
 
 
 def get_state(
-    ip: str, timeout: float = 1.0
+        ip: str, timeout: float = 1.0
 ) -> Union[None, Dict[str, Union[str, int, bytes, datetime.datetime]]]:
     """State message generator for a specific device."""
     for state in get_states(ip=ip, timeout=timeout):
@@ -647,7 +649,6 @@ def get_state(
 
 def _main_messages():
     """Example of getting states."""
-    import time
 
     class _Timer:
         start = None
